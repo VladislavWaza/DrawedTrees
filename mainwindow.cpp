@@ -61,20 +61,20 @@ MainWindow::MainWindow(QWidget *parent)
     QString axiom = "I";
     QList<TurtleData> stack;
     TurtleData data;
-    int n = 6;
+    int n = 4;
     qreal angle = 20;
     qreal diffAngle = 10;
     qreal diffAngle2 = 5;
-    qreal width = 30;
+    qreal width = 10;
     qreal minWidth = 3;
     qreal leafWidth = 5;
-    qreal len = 4;
-    qreal leafLen = 5;
+    qreal len = 20;
+    qreal leafLen = 20;
 
     QMap<QString, QString> translate;
     translate["T"] = "!T!T";
-    translate["I"] = "T[T[+I][-I]I][++I][-I]";
-
+    translate["I"] = "TT-[-I+I+I]+[+I-I-I]";
+    translate["I"] = "T-[+[+[+I[[+I+I]]]]]";
 
     unsigned char ptr[40] = {179, 48, 157, 212, 241, 124, 147, 201, 97, 32, 139, 204, 230, 105,
                              4, 194, 205, 123, 242, 254, 90, 215, 51, 176, 164, 171, 67, 248, 6, 246, 179, 82, 200, 116, 85, 23, 230, 183, 42, 105};
@@ -88,6 +88,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     genom.getRule(translate["I"]);
     qDebug() << translate["I"];
+
 
     QString bufAxiom;
     for (int i = 0; i < n; ++i)

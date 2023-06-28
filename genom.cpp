@@ -1,6 +1,7 @@
 #include "genom.h"
 #include <QRandomGenerator>
 #include <QTime>
+#include <QStack>
 
 int bounded(int num, int a, int b)
 {
@@ -64,124 +65,72 @@ void Genom::getGenom(unsigned char *ptr)
 void Genom::getRule(QString &str)
 {
     str.clear();
-    int minStrSize = bounded(m_bytes[0], 3, 15);
-    int countOfTrunks =  bounded(m_bytes[1], 1, minStrSize / 5 + 1);
-    int countOfInternode = minStrSize - countOfTrunks;
+    int countOfLetters = bounded(m_bytes[0], 3, 10); // тут сделать нормальное распределение
     int countOfBrackets = 0;
+    str += 'T';
 
-    if (countOfTrunks != 0)
+    /*
+    сперва выберем число букв
+    затем сгенерируем последовательность из символов [ ] I, но такую чтобы скобки открывались и закрывались корректно
+    затем пройдем по последовательности и будем менять некоторые I на T,
+    но так чтобы T не шло после I в одном скобочном уровне, то есть чтобы Trunk не крепился поверх Internode
+    */
+
+    unsigned char randVar;
+    int i = 1;
+    while (countOfLetters > 0)
     {
-        str += 'T';
-        --countOfTrunks;
-    }
-
-    if (countOfTrunks != 0 && (m_bytes[1] >> 7 & 1))
-    {
-        str += 'T';
-        --countOfTrunks;
-    }
-
-    int i = 2;
-    while (countOfTrunks != 0 || countOfInternode != 0)
-    {
-        int randVar;
-        if (countOfTrunks == 0 && countOfInternode != 0)
-        {
-            if (countOfBrackets > 0)
-                randVar = bounded(m_bytes[i], 0, 6);
-            else
-                randVar = bounded(m_bytes[i], 0, 5);
-
-            if (randVar % 3 == 1)
-                str += "+";
-            if (randVar % 3 == 2)
-                str += "-";
-
-            if (randVar / 3 == 0)
-            {
-                str += "[";
-                ++countOfBrackets;
-            }
-            if (randVar / 3 == 1)
-            {
-                str += "I";
-                --countOfInternode;
-            }
-            if (randVar / 3 == 2)
-            {
-                str += "]";
-                --countOfBrackets;
-            }
-        }
-        if (countOfTrunks != 0 && countOfInternode == 0)
-        {
-            if (countOfBrackets > 0)
-                randVar = bounded(m_bytes[i], 0, 6);
-            else
-                randVar = bounded(m_bytes[i], 0, 5);
-
-            if (randVar % 3 == 1)
-                str += "+";
-            if (randVar % 3 == 2)
-                str += "-";
-
-            if (randVar / 3 == 0)
-            {
-                str += "[";
-                ++countOfBrackets;
-            }
-            if (randVar / 3 == 1)
-            {
-                str += "T";
-                --countOfTrunks;
-            }
-            if (randVar / 3 == 2)
-            {
-                str += "]";
-                --countOfBrackets;
-            }
-        }
-        if (countOfTrunks != 0 && countOfInternode != 0)
-        {
-            if (countOfBrackets > 0)
-                randVar = bounded(m_bytes[i], 0, 9);
-            else
-                randVar = bounded(m_bytes[i], 0, 8);
-
-            if (randVar % 3 == 1)
-                str += "+";
-            if (randVar % 3 == 2)
-                str += "-";
-
-            if (randVar / 3 == 0)
-            {
-                str += "[";
-                ++countOfBrackets;
-            }
-            if (randVar / 3 == 1)
-            {
-                str += "T";
-                --countOfTrunks;
-            }
-            if (randVar / 3 == 2)
-            {
-                str += "I";
-                --countOfInternode;
-            }
-            if (randVar / 3 == 3)
-            {
-                str += "]";
-                --countOfBrackets;
-            }
-        }
+        if (countOfBrackets == 0)
+            randVar = bounded(m_bytes[i], 0, 5);
+        else
+            randVar = bounded(m_bytes[i], 0, 8);
         ++i;
-    }
 
+        if (randVar % 3 == 1)
+            str += "+";
+        if (randVar % 3 == 2)
+            str += "-";
+
+        if (randVar / 3 == 0)
+        {
+            str += '[';
+            ++countOfBrackets;
+        }
+        if (randVar / 3 == 1)
+        {
+            str += 'I';
+            --countOfLetters;
+        }
+        if (randVar / 3 == 2)
+        {
+            str += ']';
+            --countOfBrackets;
+        }
+    }
     while (countOfBrackets != 0)
     {
         str += "]";
         --countOfBrackets;
     }
 
+    int internodeAppLevel = INT_MAX;
+    for (int j = 0; j < str.size(); ++j)
+    {
+        if (str[j] == '[')
+            ++countOfBrackets;
+        if (str[j] == ']')
+        {
+            --countOfBrackets;
+            if (internodeAppLevel > countOfBrackets)
+                internodeAppLevel = INT_MAX;
+        }
+        if (str[j] == 'I' && m_bytes[i] % 2 == 0 && internodeAppLevel > countOfBrackets)
+        {
+            str[j] = 'T';
+            if (countOfBrackets < internodeAppLevel)
+                internodeAppLevel = countOfBrackets;
+            ++i;
+        }
+    }
     qDebug() << i;
 }
