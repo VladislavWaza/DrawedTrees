@@ -48,6 +48,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    //что надо сделать?
+    //генерация правила - поузловая
+    //4 байта(сумма деленная на 4) на число отростков
+    //проще реализовать через стек
+    //как будет определяться какой отросток будет выбран
+
+    //генератор случайного числа в нормальном распределении слишком чувствителен к сиду
+
     QPixmap pixmap(1000, 1000);
     pixmap.fill();
     QPainter painter;
@@ -56,31 +64,30 @@ MainWindow::MainWindow(QWidget *parent)
     painter.setPen(pen);
     QPointF startPoint(500, 990);
     TurtlePath turtle(startPoint);
-    QRandomGenerator generator(QTime::currentTime().msecsSinceStartOfDay());
-
 
     QString axiom = "I";
     QList<TurtleData> stack;
     TurtleData data;
     int n = 4;
     qreal angle = 20;
-    qreal diffAngle = 10;
-    qreal diffAngle2 = 5;
+    qreal stddevForStandardRotate = 7.5;
+    qreal stddevForSmallRotate = 2.5;
+    qreal stddevForTrunkLength = 0.25;
     qreal width = 10;
     qreal minWidth = 3;
     qreal leafWidth = 5;
-    qreal len = 10;
-    qreal leafLen = 10;
+    qreal len = 15;
+    qreal leafLen = 15;
+    QList<QColor> leafColors = {QColorConstants::Green, QColorConstants::DarkYellow, QColorConstants::DarkGreen};
 
     QMap<QString, QString> translate;
     translate["T"] = "!T!T";
     translate["I"] = "TT-[-I+I+I]+[+I-I-I]";
-    translate["I"] = "T-[+[+[+I[[+I+I]]]]]";
 
-    unsigned char ptr[40] = {83, 100, 58, 242, 38, 196, 227, 0, 207, 197, 216, 228, 249,
-                             178, 243, 78, 41, 3, 73, 166, 97, 106, 245, 49, 218, 176, 131, 116, 27, 19, 199, 198, 130, 6, 177, 163, 250, 255, 42, 195};
-    unsigned char ptr2[40] = {83, 100, 58, 218, 38, 196, 101, 0, 139, 197, 72, 83, 249, 84, 243, 39, 41, 3,
-                              73, 73, 97, 106, 91, 49, 218, 176, 131, 116, 27, 140, 199, 198, 130, 6, 177, 163, 218, 146, 42, 195};
+    unsigned char ptr[40] = {204, 216, 16, 145, 215, 26, 125, 26, 248, 135, 219, 3, 8, 64, 102, 77, 118, 111, 172, 68, 72,
+                             118, 55, 27, 114, 117, 43, 60, 101, 169, 191, 28, 187, 240, 92, 156, 45, 175, 34, 218};
+    unsigned char ptr2[40] = {5, 90, 200, 205, 197, 110, 61, 222, 54, 219, 37, 112, 150, 31, 145, 71, 119, 193, 67, 82, 28,
+                              155, 201, 112, 153, 113, 85, 211, 25, 115, 163, 254, 250, 60, 169, 44, 117, 151, 43, 158};
     Genom genom2(ptr2);
     Genom genom(ptr);
 
@@ -91,7 +98,7 @@ MainWindow::MainWindow(QWidget *parent)
     for (int i = 0; i < 40; ++i)
         deb.nospace() << static_cast<int>(ptr[i]) << ", ";
 
-    genom.getRule(translate["I"]);
+    //genom.getRule(translate["I"]);
     qDebug() << translate["I"];
 
 
@@ -118,23 +125,16 @@ MainWindow::MainWindow(QWidget *parent)
         ch = axiom[i];
         if (ch == 'I')
         {
-            int randVal = bounded(generator.generate(), 1, 4);
-            if (randVal == 1)
-                pen.setColor(QColorConstants::Green);
-            else if (randVal == 2)
-                pen.setColor(QColorConstants::DarkYellow);
-            else
-                pen.setColor(QColorConstants::DarkGreen);
+            pen.setColor(leafColors[QRandomGenerator::system()->bounded(leafColors.size())]);
             pen.setWidthF(leafWidth);
             drawLine(painter, turtle, pen, leafLen);
         }
         if (ch == 'T' || ch == 'S')
         {
-            turtle.leftRotate(boundedDouble(generator.generate(), -diffAngle2, diffAngle2, 0.01));
-
+            turtle.leftRotate(GenerationTools::normal(0, stddevForSmallRotate));
             pen.setColor(QColorConstants::Black);
             pen.setWidthF(width);
-            drawLine(painter, turtle, pen, boundedDouble(generator.generate(), len / 2, len * 1.5, 0.1));
+            drawLine(painter, turtle, pen, len * GenerationTools::normal(1, stddevForTrunkLength));
         }
         if (ch == '[')
         {
@@ -152,11 +152,12 @@ MainWindow::MainWindow(QWidget *parent)
         if (ch == '-')
         {
 
-            turtle.leftRotate(angle + boundedDouble(generator.generate(), -diffAngle, diffAngle, 0.01));
+            turtle.leftRotate(GenerationTools::normal(angle, stddevForStandardRotate));
         }
         if (ch == '+')
         {
-            turtle.rightRotate(angle + boundedDouble(generator.generate(), -diffAngle, diffAngle, 0.01));
+
+            turtle.rightRotate(GenerationTools::normal(angle, stddevForStandardRotate));
         }
         if (ch == '!')
         {

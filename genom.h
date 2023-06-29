@@ -2,10 +2,6 @@
 #define GENOM_H
 #include<QString>
 
-
-int bounded(int num, int a, int b);
-qreal boundedDouble(int num, qreal a, qreal b, qreal precision);
-
 class Genom
 {
 private:

@@ -3,18 +3,6 @@
 #include <QRandomGenerator>
 #include <QTime>
 
-int bounded(int num, int a, int b)
-{
-    return abs(num) % (b - a + 1) + a;
-}
-
-qreal boundedDouble(int num, qreal a, qreal b, qreal precision)
-{
-    int left = a / precision;
-    int right = b / precision;
-    return (abs(num) % (right - left + 1) + left) * precision;
-}
-
 Genom::Genom()
 {
     m_bytes = new unsigned char[m_size];
@@ -70,7 +58,8 @@ void Genom::getRule(QString &str)
     но так чтобы T не шло после I на одном скобочном уровне, то есть чтобы Trunk не крепился поверх Internode
     */
     str.clear();
-    int countOfLetters = bounded(m_bytes[0], 3, 10); // тут сделать нормальное распределение
+    int T_E_S_T = m_bytes[0] + m_bytes[1] + m_bytes[2] + m_bytes[3];
+    int countOfLetters = GenerationTools::bounded(T_E_S_T, 3, 10); // тут сделать нормальное распределение
     int countOfBrackets = 0;
     str += 'T';
     --countOfLetters;
@@ -79,10 +68,11 @@ void Genom::getRule(QString &str)
     int i = 1;
     while (countOfLetters > 0)
     {
+        if (i == m_size)
         if (countOfBrackets == 0)
-            randVar = bounded(m_bytes[i], 0, 5);
+            randVar = GenerationTools::bounded(m_bytes[i], 0, 5);
         else
-            randVar = bounded(m_bytes[i], 0, 8);
+            randVar = GenerationTools:: bounded(m_bytes[i], 0, 8);
         ++i;
 
         if (randVar % 3 == 1)
@@ -136,7 +126,7 @@ void Genom::getRule(QString &str)
 
 Genom Genom::cross(const Genom &father)
 {
-    QVector<int> vec = GeneretionTools::sample(0, m_size-1, m_size/2); // номера байт которые будут унаследованы от отца
+    QVector<int> vec = GenerationTools::sample(0, m_size-1, m_size/2); // номера байт которые будут унаследованы от отца
     Genom son(*this);
     for (int i = 0; i < m_size/2; ++i)
         son.m_bytes[vec[i]] = father.m_bytes[vec[i]];
