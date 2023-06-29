@@ -1,7 +1,7 @@
 #include "genom.h"
+#include "generationTools.h"
 #include <QRandomGenerator>
 #include <QTime>
-#include <QStack>
 
 int bounded(int num, int a, int b)
 {
@@ -18,9 +18,8 @@ qreal boundedDouble(int num, qreal a, qreal b, qreal precision)
 Genom::Genom()
 {
     m_bytes = new unsigned char[m_size];
-    QRandomGenerator generator(QTime::currentTime().msecsSinceStartOfDay());
     for (int i = 0; i < m_size; ++i)
-        m_bytes[i] = generator.bounded(0, 256);
+        m_bytes[i] = QRandomGenerator::system()->bounded(UCHAR_MAX+1);
 }
 
 Genom::Genom(const Genom &other)
@@ -64,17 +63,17 @@ void Genom::getGenom(unsigned char *ptr)
 
 void Genom::getRule(QString &str)
 {
-    str.clear();
-    int countOfLetters = bounded(m_bytes[0], 3, 10); // тут сделать нормальное распределение
-    int countOfBrackets = 0;
-    str += 'T';
-
     /*
     сперва выберем число букв
     затем сгенерируем последовательность из символов [ ] I, но такую чтобы скобки открывались и закрывались корректно
     затем пройдем по последовательности и будем менять некоторые I на T,
-    но так чтобы T не шло после I в одном скобочном уровне, то есть чтобы Trunk не крепился поверх Internode
+    но так чтобы T не шло после I на одном скобочном уровне, то есть чтобы Trunk не крепился поверх Internode
     */
+    str.clear();
+    int countOfLetters = bounded(m_bytes[0], 3, 10); // тут сделать нормальное распределение
+    int countOfBrackets = 0;
+    str += 'T';
+    --countOfLetters;
 
     unsigned char randVar;
     int i = 1;
@@ -133,4 +132,14 @@ void Genom::getRule(QString &str)
         }
     }
     qDebug() << i;
+}
+
+Genom Genom::cross(const Genom &father)
+{
+    QVector<int> vec = GeneretionTools::sample(0, m_size-1, m_size/2); // номера байт которые будут унаследованы от отца
+    Genom son(*this);
+    for (int i = 0; i < m_size/2; ++i)
+        son.m_bytes[vec[i]] = father.m_bytes[vec[i]];
+    son.m_bytes[QRandomGenerator::system()->bounded(m_size)] = QRandomGenerator::system()->bounded(UCHAR_MAX+1); // мутация
+    return son;
 }

@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "turtle.h"
 #include "genom.h"
+#include <generationTools.h>
 #include <QPainter>
 #include <QColor>
 #include <QPainterPath>
@@ -68,19 +69,23 @@ MainWindow::MainWindow(QWidget *parent)
     qreal width = 10;
     qreal minWidth = 3;
     qreal leafWidth = 5;
-    qreal len = 20;
-    qreal leafLen = 20;
+    qreal len = 10;
+    qreal leafLen = 10;
 
     QMap<QString, QString> translate;
     translate["T"] = "!T!T";
     translate["I"] = "TT-[-I+I+I]+[+I-I-I]";
     translate["I"] = "T-[+[+[+I[[+I+I]]]]]";
 
-    unsigned char ptr[40] = {179, 48, 157, 212, 241, 124, 147, 201, 97, 32, 139, 204, 230, 105,
-                             4, 194, 205, 123, 242, 254, 90, 215, 51, 176, 164, 171, 67, 248, 6, 246, 179, 82, 200, 116, 85, 23, 230, 183, 42, 105};
+    unsigned char ptr[40] = {83, 100, 58, 242, 38, 196, 227, 0, 207, 197, 216, 228, 249,
+                             178, 243, 78, 41, 3, 73, 166, 97, 106, 245, 49, 218, 176, 131, 116, 27, 19, 199, 198, 130, 6, 177, 163, 250, 255, 42, 195};
+    unsigned char ptr2[40] = {83, 100, 58, 218, 38, 196, 101, 0, 139, 197, 72, 83, 249, 84, 243, 39, 41, 3,
+                              73, 73, 97, 106, 91, 49, 218, 176, 131, 116, 27, 140, 199, 198, 130, 6, 177, 163, 218, 146, 42, 195};
+    Genom genom2(ptr2);
+    Genom genom(ptr);
 
-    Genom genom;
-    //genom = ptr;
+    genom = genom.cross(genom2);
+
     genom.getGenom(ptr);
     QDebug deb = qDebug();
     for (int i = 0; i < 40; ++i)
