@@ -8,7 +8,7 @@ namespace GenerationTools
     QVector<int> sample(int a, int b, int k);
 
     //генерирует по сиду нормально распределенную случайную величину, если ско < 0, то берется модуль
-    double normal(double mean, double stddev, unsigned int seed);
+    double normal(double mean, double stddev, uint32_t seed);
 
     //генерирует нормально распределенную случайную величину, если ско < 0, то берется модуль
     double normal(double mean, double stddev);

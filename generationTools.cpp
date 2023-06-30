@@ -22,7 +22,7 @@ QVector<int> GenerationTools::sample(int a, int b, int k)
     return result;
 }
 
-double GenerationTools::normal(double mean, double stddev, unsigned int seed)
+double GenerationTools::normal(double mean, double stddev, uint32_t seed)
 {
     if (stddev < 0)
         stddev = -stddev;

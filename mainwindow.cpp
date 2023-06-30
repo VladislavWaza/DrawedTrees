@@ -60,31 +60,32 @@ MainWindow::MainWindow(QWidget *parent)
     QString axiom = "I";
     QList<TurtleData> stack;
     TurtleData data;
-    //int n = 4;
-    int minLenAxiom = 3000;
-    qreal angle = 35;
-    qreal stddevForStandardRotate = 7.5;
-    qreal stddevForSmallRotate = 2.5;
-    qreal stddevForTrunkLength = 0.25;
+    int n = 3;
+    int minLenAxiom = 600;
+    qreal stddevForStandardRotate = 0; //7.5
+    qreal stddevForSmallRotate = 0; //2.5
+    qreal stddevForTrunkLength = 0; //0.25
     qreal width = 5;
     qreal minWidth = 3;
     qreal leafWidth = 5;
-    qreal len = 15;
-    qreal leafLen = 15;
+    qreal len = 30;
+    qreal leafLen = 30;
     QList<QColor> leafColors = {QColorConstants::Green, QColorConstants::DarkYellow, QColorConstants::DarkGreen};
 
     QMap<QString, QString> translate;
     translate["T"] = "!T!T";
     translate["I"] = "TT-[-I+I+I]+[+I-I-I]";
 
-    unsigned char ptr[40] = {221, 229, 217, 254, 199, 150, 40, 62, 72, 75, 17, 90, 17, 190, 177, 233, 171,
-                             154, 25, 71, 124, 134, 101, 10, 165, 147, 33, 245, 13, 122, 69, 31, 113, 137, 53, 34, 192, 122, 74, 69};
-    unsigned char ptr2[40] = {101, 58, 55, 53, 207, 52, 97, 191, 237, 88, 184, 145, 35, 141, 221, 246, 62, 50, 116, 117,
-                              188, 74, 84, 82, 115, 3, 157, 56, 245, 241, 21, 42, 21, 124, 15, 86, 107, 128, 157, 150};
+    uint8_t ptr[60] = {83, 139, 252, 47, 126, 112, 45, 105, 100, 28, 255, 150, 64, 209, 238, 82, 86, 203,
+                       229, 53, 75, 251, 236, 24, 217, 134, 17, 52, 189, 249, 170, 52, 135, 3, 55, 121, 82,
+                       10, 208, 103, 155, 23, 194, 38, 245, 76, 125, 230, 28, 35, 206, 202, 113, 34, 255, 138, 88, 45, 111, 182};
+    uint8_t ptr2[60] = {58, 45, 21, 58, 9, 175, 28, 56, 191, 101, 154, 73, 221, 195, 239, 167, 70, 214, 196, 156, 227, 7,
+                        214, 84, 55, 92, 215, 224, 152, 69, 31, 119, 31, 213, 66, 135, 124, 194, 160, 109, 64, 206, 250,
+                        100, 105, 19, 139, 105, 18, 223, 175, 164, 121, 247, 139, 96, 123, 64, 251, 191};
     Genom genom2(ptr2);
-    Genom genom;
+    Genom genom(ptr);
 
-    //genom = genom.cross(genom2);
+    genom = genom.cross(genom2);
 
     genom.getGenom(ptr);
     QDebug deb = qDebug();
@@ -96,11 +97,11 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     QString bufAxiom;
-    //for (int i = 0; i < n; ++i)
-    int n = 0;
-    while (axiom.size() < minLenAxiom)
+    int m = 0;
+    for (int i = 0; i < n; ++i)
+    //while (axiom.size() < minLenAxiom)
     {
-        ++n;
+        ++m;
         bufAxiom.clear();
         for (int j = 0; j < axiom.length(); ++j)
         {
@@ -113,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
         axiom = bufAxiom;
     }
-    qDebug() << n;
+    qDebug() << m;
 
     qDebug() << axiom.length();
     QChar ch;
@@ -146,15 +147,16 @@ MainWindow::MainWindow(QWidget *parent)
             turtle.moveTo(data.m_point);
             width = data.m_width;
         }
-        if (ch == '-')
+        if (ch == '(')
         {
-
-            turtle.leftRotate(GenerationTools::normal(angle, stddevForStandardRotate));
-        }
-        if (ch == '+')
-        {
-
-            turtle.rightRotate(GenerationTools::normal(angle, stddevForStandardRotate));
+            QString str;
+            ++i;
+            while (axiom[i] != ')')
+            {
+                str += axiom[i];
+                ++i;
+            }
+            turtle.leftRotate(GenerationTools::normal(str.toInt(), stddevForStandardRotate));
         }
         if (ch == '!')
         {
