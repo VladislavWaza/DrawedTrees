@@ -48,14 +48,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    //что надо сделать?
-    //генерация правила - поузловая
-    //4 байта(сумма деленная на 4) на число отростков
-    //проще реализовать через стек
-    //как будет определяться какой отросток будет выбран
-
-    //генератор случайного числа в нормальном распределении слишком чувствителен к сиду
-
     QPixmap pixmap(1000, 1000);
     pixmap.fill();
     QPainter painter;
@@ -68,12 +60,13 @@ MainWindow::MainWindow(QWidget *parent)
     QString axiom = "I";
     QList<TurtleData> stack;
     TurtleData data;
-    int n = 4;
-    qreal angle = 20;
+    //int n = 4;
+    int minLenAxiom = 3000;
+    qreal angle = 35;
     qreal stddevForStandardRotate = 7.5;
     qreal stddevForSmallRotate = 2.5;
     qreal stddevForTrunkLength = 0.25;
-    qreal width = 10;
+    qreal width = 5;
     qreal minWidth = 3;
     qreal leafWidth = 5;
     qreal len = 15;
@@ -84,27 +77,30 @@ MainWindow::MainWindow(QWidget *parent)
     translate["T"] = "!T!T";
     translate["I"] = "TT-[-I+I+I]+[+I-I-I]";
 
-    unsigned char ptr[40] = {204, 216, 16, 145, 215, 26, 125, 26, 248, 135, 219, 3, 8, 64, 102, 77, 118, 111, 172, 68, 72,
-                             118, 55, 27, 114, 117, 43, 60, 101, 169, 191, 28, 187, 240, 92, 156, 45, 175, 34, 218};
-    unsigned char ptr2[40] = {5, 90, 200, 205, 197, 110, 61, 222, 54, 219, 37, 112, 150, 31, 145, 71, 119, 193, 67, 82, 28,
-                              155, 201, 112, 153, 113, 85, 211, 25, 115, 163, 254, 250, 60, 169, 44, 117, 151, 43, 158};
+    unsigned char ptr[40] = {221, 229, 217, 254, 199, 150, 40, 62, 72, 75, 17, 90, 17, 190, 177, 233, 171,
+                             154, 25, 71, 124, 134, 101, 10, 165, 147, 33, 245, 13, 122, 69, 31, 113, 137, 53, 34, 192, 122, 74, 69};
+    unsigned char ptr2[40] = {101, 58, 55, 53, 207, 52, 97, 191, 237, 88, 184, 145, 35, 141, 221, 246, 62, 50, 116, 117,
+                              188, 74, 84, 82, 115, 3, 157, 56, 245, 241, 21, 42, 21, 124, 15, 86, 107, 128, 157, 150};
     Genom genom2(ptr2);
-    Genom genom(ptr);
+    Genom genom;
 
-    genom = genom.cross(genom2);
+    //genom = genom.cross(genom2);
 
     genom.getGenom(ptr);
     QDebug deb = qDebug();
-    for (int i = 0; i < 40; ++i)
+    for (int i = 0; i < Genom::m_size; ++i)
         deb.nospace() << static_cast<int>(ptr[i]) << ", ";
 
-    //genom.getRule(translate["I"]);
+    genom.getRule(translate["I"]);
     qDebug() << translate["I"];
 
 
     QString bufAxiom;
-    for (int i = 0; i < n; ++i)
+    //for (int i = 0; i < n; ++i)
+    int n = 0;
+    while (axiom.size() < minLenAxiom)
     {
+        ++n;
         bufAxiom.clear();
         for (int j = 0; j < axiom.length(); ++j)
         {
@@ -117,6 +113,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
         axiom = bufAxiom;
     }
+    qDebug() << n;
 
     qDebug() << axiom.length();
     QChar ch;

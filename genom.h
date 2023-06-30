@@ -7,7 +7,7 @@ class Genom
 private:
     unsigned char* m_bytes;
 public:
-    const int m_size = 40; //должно быть четным
+    static const int m_size = 40; //должно делиться на 4
     Genom();
     Genom(const Genom &other);
     Genom(const unsigned char *ptr);

@@ -6,8 +6,8 @@
 Genom::Genom()
 {
     m_bytes = new unsigned char[m_size];
-    for (int i = 0; i < m_size; ++i)
-        m_bytes[i] = QRandomGenerator::system()->bounded(UCHAR_MAX+1);
+    for (int i = 0; i < m_size/4; ++i)
+        *reinterpret_cast<unsigned int*>(&m_bytes[4*i]) = QRandomGenerator::system()->generate();
 }
 
 Genom::Genom(const Genom &other)
@@ -51,77 +51,48 @@ void Genom::getGenom(unsigned char *ptr)
 
 void Genom::getRule(QString &str)
 {
-    /*
-    сперва выберем число букв
-    затем сгенерируем последовательность из символов [ ] I, но такую чтобы скобки открывались и закрывались корректно
-    затем пройдем по последовательности и будем менять некоторые I на T,
-    но так чтобы T не шло после I на одном скобочном уровне, то есть чтобы Trunk не крепился поверх Internode
-    */
     str.clear();
-    int T_E_S_T = m_bytes[0] + m_bytes[1] + m_bytes[2] + m_bytes[3];
-    int countOfLetters = GenerationTools::bounded(T_E_S_T, 3, 10); // тут сделать нормальное распределение
-    int countOfBrackets = 0;
-    str += 'T';
-    --countOfLetters;
-
-    unsigned char randVar;
-    int i = 1;
-    while (countOfLetters > 0)
+    str += "T?"; //рисуем ствол и обозначем символом '?' узел
+    QString buffer;
+    int passСounter = 1;
+    int curByteNum = 0;
+    int branchesNum = 0;
+    unsigned char randVar = 0;
+    while (passСounter <= 2)
     {
-        if (i == m_size)
-        if (countOfBrackets == 0)
-            randVar = GenerationTools::bounded(m_bytes[i], 0, 5);
-        else
-            randVar = GenerationTools:: bounded(m_bytes[i], 0, 8);
-        ++i;
+        for (int i = 0; i < str.size(); ++i) //проходимся по строке
+        {
+            if (str[i] != '?')
+                buffer += str[i];
+            else //на месте узла создаем новые ответвления
+            {
+                branchesNum = 0;
+                for (int j = 0; j < 5; ++j)
+                    branchesNum += m_bytes[curByteNum + j];
+                branchesNum = GenerationTools::bounded(branchesNum / 5, 1, 5); //генерируем количество ответвлений
 
-        if (randVar % 3 == 1)
-            str += "+";
-        if (randVar % 3 == 2)
-            str += "-";
-
-        if (randVar / 3 == 0)
-        {
-            str += '[';
-            ++countOfBrackets;
+                for (int j = 0; j < branchesNum; ++j) //рисуем новые отростки
+                {
+                    buffer += '[';
+                    randVar = GenerationTools::bounded(m_bytes[curByteNum], 0, 8);
+                    ++curByteNum;
+                    if (randVar % 3 == 1)
+                        buffer += '+';
+                    if (randVar % 3 == 2)
+                        buffer += '-';
+                    if (randVar / 3 == 0)
+                        buffer += "T?";
+                    if (randVar / 3 >= 1)
+                        buffer += 'I';
+                    buffer += ']';
+                }
+                curByteNum += branchesNum - 5;
+            }
         }
-        if (randVar / 3 == 1)
-        {
-            str += 'I';
-            --countOfLetters;
-        }
-        if (randVar / 3 == 2)
-        {
-            str += ']';
-            --countOfBrackets;
-        }
+        str = buffer;
+        ++passСounter;
     }
-    while (countOfBrackets != 0)
-    {
-        str += "]";
-        --countOfBrackets;
-    }
-
-    int internodeAppLevel = INT_MAX;
-    for (int j = 0; j < str.size(); ++j)
-    {
-        if (str[j] == '[')
-            ++countOfBrackets;
-        if (str[j] == ']')
-        {
-            --countOfBrackets;
-            if (internodeAppLevel > countOfBrackets)
-                internodeAppLevel = INT_MAX;
-        }
-        if (str[j] == 'I' && m_bytes[i] % 2 == 0 && internodeAppLevel > countOfBrackets)
-        {
-            str[j] = 'T';
-            if (countOfBrackets < internodeAppLevel)
-                internodeAppLevel = countOfBrackets;
-            ++i;
-        }
-    }
-    qDebug() << i;
+    str = str.replace('?', 'I'); //заменяем оставшиеся узлы на листы
 }
 
 Genom Genom::cross(const Genom &father)
