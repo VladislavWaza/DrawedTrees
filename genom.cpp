@@ -43,13 +43,13 @@ Genom &Genom::operator=(const uint8_t *ptr)
     return *this;
 }
 
-void Genom::getGenom(uint8_t *ptr)
+void Genom::genom(uint8_t *ptr)
 {
     for (int i = 0; i < m_size; ++i)
         ptr[i] = m_bytes[i];
 }
 
-void Genom::getRule(QString &str)
+void Genom::rule(QString &str)
 {
     str.clear();
     //формируем дискретное распределения для угла поворота
@@ -76,22 +76,29 @@ void Genom::getRule(QString &str)
         }
     }
 
-    str += "T?"; //рисуем ствол и обозначем символом '?' узел
+    str += "T{1}?"; //рисуем ствол и обозначем символом '?' узел
+    //2 БАЙТА НА ПЕРВУЮ ПАЛКУ (60 и 61)
+
     QString buffer;
     int branchesNum = 0;
     int curByteNum = 0;
     int randVar = 0;
-    int passСounter = 1;
     const int bytePerNode = 10; //узел определяется 10 байтами
     const int bytePerBranch = 2; //ответвление определяется 2 байтами
-    while (passСounter <= 2)
+    char flagHasNodes = 1; //показывает есть ли еще незаполненные узлы
+
+    while (flagHasNodes)
     {
+        flagHasNodes = 0;
+        if (curByteNum > m_sizeOfRuleBlock - bytePerNode) //досрочный выход при выходе из отведенного блока генов
+            break;
         for (int i = 0; i < str.size(); ++i) //проходимся по строке
         {
-            if (str[i] != '?')
+            if (str[i] != '?' || curByteNum > m_sizeOfRuleBlock - bytePerNode) //пропуск узлов при выходе из отведенного блока генов
                 buffer += str[i];
             else //на месте узла создаем новые ответвления
             {
+                flagHasNodes= 1;
                 QList<int> branchesNumCounter(5);
                 branchesNumCounter.fill(0);
                 for (int j = 0; j < bytePerNode; ++j) //считаем кол-во байт дающих определенный остаток
@@ -119,11 +126,12 @@ void Genom::getRule(QString &str)
                     buffer += QString::number(angles[randVar]);
                     buffer += ')';
 
-                    randVar = GenerationTools::bounded(m_bytes[curByteNum], 0, 8);
-                    if (randVar / 3 == 0)
-                        buffer += "T?";
-                    if (randVar / 3 >= 1)
+                    if ((m_bytes[curByteNum] & 1) == 1) //младший бит определяет тип ветки
+                        buffer += "T{1}?";
+                    else
                         buffer += 'I';
+
+
                     buffer += ']';
                     curByteNum += bytePerBranch;
                 }
@@ -132,10 +140,50 @@ void Genom::getRule(QString &str)
         }
         str = buffer;
         buffer.clear();
-        ++passСounter;
     }
     str = str.replace('?', 'I'); //заменяем оставшиеся узлы на листы
     qDebug() << curByteNum;
+}
+
+double Genom::lengthening()
+{
+    //2 байта на удлинение
+    uint16_t gene = *reinterpret_cast<uint16_t*>(&m_bytes[m_sizeOfRuleBlock + 2]);
+    uint8_t twoBits = 0;
+    double lengthening = 1.1; //наименьшая величина
+    for (int i = 0; i < 8; ++i) //16 бит разбиваем на 8 кусков по 2 бита
+    {
+        twoBits = ((gene >> 2*i) & 3);
+        if (twoBits == 1)
+            lengthening += 0.02;
+        if (twoBits == 2)
+            lengthening += 0.06;
+        if (twoBits == 3)
+            lengthening += 0.12;
+    }
+    return lengthening;
+}
+
+QColor Genom::trunkColor()
+{
+    //12 байт, младшие разряды
+    //среднее арифметическое младших разрядов двух байт - одна буква в hex форме
+    int i = m_sizeOfRuleBlock + 4;
+
+    int red = ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+    i=i+2;
+    red = 16*red + ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+
+    int green = ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+    i=i+2;
+    green = 16*green + ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+
+    int blue = ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+    i=i+2;
+    blue = 16*blue + ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+
+    QColor color(red, green, blue);
+    return color;
 }
 
 Genom Genom::cross(const Genom &father)

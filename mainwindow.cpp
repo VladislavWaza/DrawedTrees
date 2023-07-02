@@ -61,40 +61,42 @@ MainWindow::MainWindow(QWidget *parent)
     QList<TurtleData> stack;
     TurtleData data;
     int n = 3;
-    int minLenAxiom = 600;
+    int minLenAxiom = 1000;
     qreal stddevForStandardRotate = 0; //7.5
-    qreal stddevForSmallRotate = 0; //2.5
+    qreal stddevForSmallRotate = 0; //10
     qreal stddevForTrunkLength = 0; //0.25
-    qreal width = 5;
+    qreal width = 3;
     qreal minWidth = 3;
     qreal leafWidth = 5;
-    qreal len = 30;
-    qreal leafLen = 30;
+    double startLen = 30;
+    qreal leafLen = 15;
     QList<QColor> leafColors = {QColorConstants::Green, QColorConstants::DarkYellow, QColorConstants::DarkGreen};
 
+    //важные параметры:
+    //цвет листьев
+    //смещение цвета ствола
+    //толщины
+    //форма листа
+
     QMap<QString, QString> translate;
-    translate["T"] = "!T!T";
-    translate["I"] = "TT-[-I+I+I]+[+I-I-I]";
+    translate["I"] = "";
 
-    uint8_t ptr[60] = {83, 139, 252, 47, 126, 112, 45, 105, 100, 28, 255, 150, 64, 209, 238, 82, 86, 203,
-                       229, 53, 75, 251, 236, 24, 217, 134, 17, 52, 189, 249, 170, 52, 135, 3, 55, 121, 82,
-                       10, 208, 103, 155, 23, 194, 38, 245, 76, 125, 230, 28, 35, 206, 202, 113, 34, 255, 138, 88, 45, 111, 182};
-    uint8_t ptr2[60] = {58, 45, 21, 58, 9, 175, 28, 56, 191, 101, 154, 73, 221, 195, 239, 167, 70, 214, 196, 156, 227, 7,
-                        214, 84, 55, 92, 215, 224, 152, 69, 31, 119, 31, 213, 66, 135, 124, 194, 160, 109, 64, 206, 250,
-                        100, 105, 19, 139, 105, 18, 223, 175, 164, 121, 247, 139, 96, 123, 64, 251, 191};
-    Genom genom2(ptr2);
+    uint8_t ptr[Genom::m_size] = {39, 35, 162, 91, 197, 132, 13, 99, 231, 9, 200, 84, 97, 254, 230, 0, 68, 101, 152, 57, 226, 212, 171, 207, 130, 189, 235, 16, 210, 195, 35, 155, 183, 92, 204, 8, 162, 174, 146, 9, 159, 167, 82, 112, 67, 207, 27, 216, 142, 81, 99, 84, 240, 65, 250, 206, 204, 200, 219, 209, 87, 233, 184, 44, 15, 15, 60, 35, 8, 8, 115, 54, 8, 8, 7, 65};
+    uint8_t ptr2[Genom::m_size] = {39, 35, 162, 226, 197, 132, 33, 99, 231, 9, 200, 84, 97, 164, 230, 0, 68, 125, 152, 57, 226, 60, 171, 232, 130, 189, 44, 92, 219, 195, 35, 155, 183, 92, 204, 8, 215, 107, 99, 209, 159, 167, 82, 112, 67, 207, 27, 216, 114, 81, 99, 84, 240, 65, 250, 206, 204, 200, 11, 209, 87, 233, 184, 44, 15, 15, 60, 35, 8, 8, 204, 141, 8, 8, 7, 35};
+    Genom genom2(ptr);
     Genom genom(ptr);
-
     genom = genom.cross(genom2);
 
-    genom.getGenom(ptr);
+    genom.genom(ptr);
     QDebug deb = qDebug();
     for (int i = 0; i < Genom::m_size; ++i)
         deb.nospace() << static_cast<int>(ptr[i]) << ", ";
 
-    genom.getRule(translate["I"]);
+    genom.rule(translate["I"]);
+    QColor trunkColor = genom.trunkColor();
+    double lengthening = genom.lengthening();
     qDebug() << translate["I"];
-
+    qDebug() << lengthening;
 
     QString bufAxiom;
     int m = 0;
@@ -110,7 +112,20 @@ MainWindow::MainWindow(QWidget *parent)
                 bufAxiom += translate[axiom[j]];
             }
             else
-               bufAxiom += axiom[j];
+            {
+                bufAxiom += axiom[j];
+                if (axiom[j] == 'T')
+                {
+                    QString str;
+                    j += 2;
+                    while (axiom[j] != '}')
+                    {
+                        str += axiom[j];
+                        ++j;
+                    }
+                    bufAxiom += '{' + QString::number(str.toDouble() * lengthening) + '}';
+                }
+            }
         }
         axiom = bufAxiom;
     }
@@ -127,12 +142,30 @@ MainWindow::MainWindow(QWidget *parent)
             pen.setWidthF(leafWidth);
             drawLine(painter, turtle, pen, leafLen);
         }
-        if (ch == 'T' || ch == 'S')
+        if (ch == 'T')
         {
-            turtle.leftRotate(GenerationTools::normal(0, stddevForSmallRotate));
-            pen.setColor(QColorConstants::Black);
+            pen.setColor(trunkColor);
             pen.setWidthF(width);
-            drawLine(painter, turtle, pen, len * GenerationTools::normal(1, stddevForTrunkLength));
+
+            QString str;
+            i += 2;
+            while (axiom[i] != '}')
+            {
+                str += axiom[i];
+                ++i;
+            }
+            double len = startLen * str.toDouble() * GenerationTools::normal(1, stddevForTrunkLength);
+
+            //отрисовывать будем не все сразу, а равными кусочками
+            double drawnLength = 0;
+            for (int pieceNumber = 0; pieceNumber < len / startLen; ++pieceNumber)
+            {
+                turtle.leftRotate(GenerationTools::normal(0, stddevForSmallRotate));
+                drawLine(painter, turtle, pen, startLen);
+                drawnLength += startLen;
+            }
+            //дорисуем то что осталось
+            drawLine(painter, turtle, pen, len - drawnLength);
         }
         if (ch == '[')
         {
