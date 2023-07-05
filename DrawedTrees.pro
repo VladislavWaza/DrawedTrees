@@ -13,12 +13,14 @@ SOURCES += \
     genom.cpp \
     main.cpp \
     mainwindow.cpp \
+    treeDrawing.cpp \
     turtle.cpp
 
 HEADERS += \
     generationTools.h \
     genom.h \
     mainwindow.h \
+    treeDrawing.h \
     turtle.h
 
 FORMS += \
