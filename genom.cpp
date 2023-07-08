@@ -43,14 +43,14 @@ Genom &Genom::operator=(const uint8_t *ptr)
     return *this;
 }
 
-void Genom::genom(uint8_t *ptr)
+void Genom::genom(uint8_t *ptr) const
 {
     for (int i = 0; i < m_size; ++i)
         ptr[i] = m_bytes[i];
 }
 
 
-void Genom::getAngleRange(QVector<int> &range)
+void Genom::getAngleRange(QVector<int> &range) const
 {
     range.clear();
     //формируем дискретное распределения для угла поворота
@@ -77,7 +77,7 @@ void Genom::getAngleRange(QVector<int> &range)
     }
 }
 
-int Genom::getAngle(int curByteNum, const QVector<int> &range)
+int Genom::getAngle(int curByteNum, const QVector<int> &range) const
 {
     int randVar = *reinterpret_cast<uint16_t*>(&m_bytes[curByteNum]); //выписываем двухбайтное число
     randVar = GenerationTools::bounded(randVar, 0, range.size() - 1); //выбираем номер ячейки в range
@@ -85,7 +85,7 @@ int Genom::getAngle(int curByteNum, const QVector<int> &range)
 }
 
 
-int Genom::getNumberOfBranches(int curByteNum)
+int Genom::getNumberOfBranches(int curByteNum) const
 {
     QList<int> counter(5);
     counter.fill(0);
@@ -111,14 +111,14 @@ int Genom::getNumberOfBranches(int curByteNum)
 }
 
 
-void Genom::getTrunkParams(QString &params, int curByteNum)
+void Genom::getTrunkParams(QString &params, int curByteNum) const
 {
     params.clear();
     params += "{1,";
 
     //на утоньшение идут старшие 4 бита первого и второго байта ветки
     int thinning = m_bytes[curByteNum] / 16 * 16 + m_bytes[curByteNum + 1] / 16;
-    params += QString::number(thinning) + ',';
+    params += QString::number(thinning / 2) + ',';
 
     //на послесдвиговый цвет идут 3 байта
     params += QString::number(m_bytes[curByteNum + 2]) + ',';
@@ -127,7 +127,7 @@ void Genom::getTrunkParams(QString &params, int curByteNum)
 }
 
 
-void Genom::rule(QString &str)
+void Genom::rule(QString &str) const
 {
     str.clear();   
     QVector<int> range;
@@ -187,7 +187,7 @@ void Genom::rule(QString &str)
     qDebug() << curByteNum;
 }
 
-double Genom::lengthening()
+double Genom::lengthening() const
 {
     //2 байта на удлинение
     uint16_t gene = *reinterpret_cast<uint16_t*>(&m_bytes[m_endOfFirstTrunkBlock]);
@@ -206,29 +206,25 @@ double Genom::lengthening()
     return lengthening;
 }
 
-QColor Genom::trunkColor()
+QColor Genom::trunkColor() const
 {
-    //12 байт, младшие разряды
-    //среднее арифметическое младших разрядов двух байт - одна буква в hex форме
+    //6 байт, младшие разряды
+    //младший разряд байта - одна буква в hex форме
     int i = m_endOfLengtheningBlock;
 
-    int red = ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+    int red = 16 * (m_bytes[i] & 15) + (m_bytes[i + 1] & 15);
     i=i+2;
-    red = 16*red + ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
 
-    int green = ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+    int green = 16 * (m_bytes[i] & 15) + (m_bytes[i + 1] & 15);
     i=i+2;
-    green = 16*green + ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
 
-    int blue = ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
-    i=i+2;
-    blue = 16*blue + ((m_bytes[i] & 15) + (m_bytes[i + 1] & 15)) / 2;
+    int blue = 16 * (m_bytes[i] & 15) + (m_bytes[i + 1] & 15);
 
     QColor color(red, green, blue);
     return color;
 }
 
-void Genom::cross(const Genom &father, Genom& son)
+void Genom::cross(const Genom &father, Genom& son) const
 {
     son = *this;
     QVector<int> vec = GenerationTools::sample(0, m_size-1, m_size/2); // номера байт которые будут унаследованы от отца
