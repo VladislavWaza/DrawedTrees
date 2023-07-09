@@ -1,7 +1,8 @@
 #ifndef GENOM_H
 #define GENOM_H
-#include<QString>
-#include<QColor>
+#include <QString>
+#include <QColor>
+#include "turtle.h"
 
 class Genom
 {
@@ -62,6 +63,9 @@ public:
     //следующие 3 числа означают цвет в формате RGB, который ствол достигает по своему завершению
     //I означает междоузлие
     void rule(QString &str) const;
+
+    void leaf(TurtlePath &path, double len, double angle = 0) const;
+    void leaf(QString &str) const;
 
     //выбирает стартовый цвет ствола
     QColor trunkColor() const;

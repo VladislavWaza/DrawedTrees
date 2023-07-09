@@ -13,6 +13,7 @@ SOURCES += \
     genom.cpp \
     main.cpp \
     mainwindow.cpp \
+    nib.cpp \
     treeDrawing.cpp \
     turtle.cpp
 
@@ -20,6 +21,7 @@ HEADERS += \
     generationTools.h \
     genom.h \
     mainwindow.h \
+    nib.h \
     treeDrawing.h \
     turtle.h
 

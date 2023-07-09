@@ -2,32 +2,28 @@
 #include <QDebug>
 #include <QRandomGenerator>
 #include "treeDrawing.h"
-#include "turtle.h"
 #include "generationTools.h"
+#include "nib.h"
 
-
-void drawLine(QPainter &painter, TurtlePath &turtle, const QPen &pen, double len);
-void growTree(QString &axiom, const QString &rule, int n, double lengthening);
-struct TurtleData
+void drawLine(QPainter &painter, Nib &nib, double len)
 {
-    double m_angle;
-    QPointF m_point;
-    double m_width;
-    double m_red;
-    double m_green;
-    double m_blue;
+    QPen pen;
+    pen.setStyle(Qt::SolidLine);
+    pen.setCapStyle(Qt::SquareCap);
+    pen.setWidthF(nib.getWidth());
+    pen.setColor(nib.getColor());
+    painter.setPen(pen);
 
-    TurtleData();
-    TurtleData(double angle, QPointF point, double width, double red, double green, double blue);
+    QPointF	start = nib.getPoint();
+    double angle = nib.getAngle();
+    double newX = start.x() + len*qCos(qDegreesToRadians(angle));
+    double newY = start.y() - len*qSin(qDegreesToRadians(angle));
+    QPointF end(newX, newY);
+    painter.drawLine(start, end);
 
-    void set(double angle, QPointF point, double width, double red, double green, double blue);
-    void set(double angle, QPointF point);
-    void set(struct TurtleData data);
-    void setColor(const QColor& color);
-
-    QColor getColor();
-};
-
+    nib.setPoint(end);
+}
+void growTree(QString &axiom, const QString &rule, int n, double lengthening);
 
 void drawTree(QPixmap& returnedPixmap, const Genom &genom,
               double stddevForStandardRotate, double stddevForSmallRotate, double stddevForTrunkLength)
@@ -36,45 +32,81 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
     pixmap.fill();
     QPainter painter;
     painter.begin(&pixmap);
-    QPen pen(Qt::black, 1, Qt::SolidLine, Qt::SquareCap);
-    painter.setPen(pen);
-    QPointF startPoint(550, 1050);
-    TurtlePath turtle(startPoint);
 
-    QString axiom = "I";
-    QList<TurtleData> stack;
-    TurtleData data;
-    data.m_width = 30;
+    QPointF startPoint(550, 1050);
     int numberОfGrowthIterations = 3;
-    double minWidth = 3;
-    double leafWidth = 5;
     double startLen = 40;
     double pieceOfTrunkLen = 1;
-    double leafLen = 15;
+    double pieceOfAntennaLen = 1;
+    double minWidth = 3;
+    double antennaWidth = 3;
+    double startWidth = 30;
     QList<QColor> leafColors = {QColorConstants::Green, QColorConstants::DarkYellow, QColorConstants::DarkGreen};
-    //важные параметры:
-    //цвет листьев
-    //толщины
-    //форма листа
+    QString axiom = "I";
+    QList<Nib> stackOfNibs;
+    Nib nib(minWidth, startWidth, startPoint, 90);
 
     QString rule;
     genom.rule(rule);
-    data.setColor(genom.trunkColor());
-    double lengthening = genom.lengthening();
     qDebug() << rule;
-    qDebug() << lengthening;
+
+    QString leafRule;
+    genom.leaf(leafRule);
+    qDebug() << leafRule;
+
+    double lengthening = genom.lengthening();
+    nib.setColor(genom.trunkColor());
+
     growTree(axiom, rule, numberОfGrowthIterations, lengthening);
     qDebug() << axiom.length();
+
+
+    ////////////////////////
+    axiom.replace('I', leafRule);
+    ////////////////////////
+    TurtlePath leaf;
+    genom.leaf(leaf, 10);
+    ////////////////////////
+
 
     QChar ch;
     for (int i = 0; i < axiom.size(); ++i)
     {
         ch = axiom[i];
+        if (ch == 'A')
+        {
+            QString paramStr;
+            i += 2; //переходим на символ после открывающей скобки
+            while (axiom[i] != '}') //выписываем все параметры
+            {
+                paramStr += axiom[i];
+                ++i;
+            }
+            QStringList paramList = paramStr.split(',');
+            int countOfPieces = paramList[0].toInt();
+            double angle = paramList[1].toDouble();
+            nib.setColor(paramList[2].toInt(), paramList[3].toInt(), paramList[4].toInt());
+            nib.setWidth(antennaWidth);
+
+            for (int j = 0; j < countOfPieces; ++j)
+            {
+                drawLine(painter, nib, pieceOfAntennaLen);
+                nib.increaseAngle(angle);
+            }
+        }
         if (ch == 'I')
         {
-            pen.setColor(leafColors[QRandomGenerator::system()->bounded(leafColors.size())]);
-            pen.setWidthF(leafWidth);
-            drawLine(painter, turtle, pen, leafLen);
+            /*
+            nib.setColor(leafColors[QRandomGenerator::system()->bounded(leafColors.size())]);
+            nib.setWidth(antennaWidth);
+            /////////////////////////
+            painter.setPen(pen);
+            genom.leaf(leaf, 15, turtle.getAngle());
+            TurtlePath myleaf = leaf.translated(turtle.currentPosition());
+            painter.drawPath(myleaf);
+            ////////////////////////
+            //drawLine(painter, turtle, pen, leafLen);
+            */
         }
         if (ch == 'T')
         {
@@ -86,56 +118,41 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
                 ++i;
             }
             QStringList paramList = paramStr.split(',');
-
             double len = startLen * paramList[0].toDouble() * GenerationTools::normal(1, stddevForTrunkLength);
-
             double thinning = 1 - paramList[1].toDouble() / 10000;
             //делить на 100 чтобы перевести в проценты
             //делать еще не 100 чтобы перевести в множитель
             //после вычитания из единицы получается величина которую нужно умножать на старую толщину чтобы получить новую
 
-            double red = (paramList[2].toDouble() - data.m_red) / static_cast<int>(len / pieceOfTrunkLen);
-            double green = (paramList[3].toDouble() - data.m_green) / static_cast<int>(len / pieceOfTrunkLen);
-            double blue = (paramList[4].toDouble() - data.m_blue) / static_cast<int>(len / pieceOfTrunkLen);
+            double red = (paramList[2].toDouble() - nib.getRed()) / static_cast<int>(len / pieceOfTrunkLen);
+            double green = (paramList[3].toDouble() - nib.getGreen()) / static_cast<int>(len / pieceOfTrunkLen);
+            double blue = (paramList[4].toDouble() - nib.getBlue()) / static_cast<int>(len / pieceOfTrunkLen);
             //величины, на которые нужно увеличивать цвет(по каждой из компонент) на каждом кусочке чтобы получить заданный
-
 
             //отрисовывать будем не все сразу, а равными кусочками
             double drawnLength = 0;
             while(drawnLength < len)
             {
-                data.m_red += red;
-                data.m_green += green;
-                data.m_blue += blue;
-                pen.setColor(data.getColor());
-
-                data.m_width *= thinning;
-                if (data.m_width < minWidth)
-                    data.m_width = minWidth;
-                pen.setWidthF(data.m_width);
-
-                turtle.leftRotate(GenerationTools::normal(0, stddevForSmallRotate));
-                drawLine(painter, turtle, pen, pieceOfTrunkLen);
+                nib.increaseColor(red, green, blue);
+                nib.multiplyWidth(thinning);
+                nib.increaseAngle(GenerationTools::normal(0, stddevForSmallRotate));
+                drawLine(painter, nib, pieceOfTrunkLen);
                 drawnLength += pieceOfTrunkLen;
-
                 if (len - drawnLength < pieceOfTrunkLen) //дорисуем то что осталось
                 {
-                    drawLine(painter, turtle, pen, len - drawnLength);
+                    drawLine(painter, nib, len - drawnLength);
                     break;
                 }
             }
         }
         if (ch == '[')
         {
-            data.set(turtle.getAngle(), turtle.currentPosition());
-            stack.append(data);
+            stackOfNibs.append(nib);
         }
         if (ch == ']')
         {
-            data.set(stack.last());
-            stack.removeLast();
-            turtle.setAngle(data.m_angle);
-            turtle.moveTo(data.m_point);
+            nib.set(stackOfNibs.last());
+            stackOfNibs.removeLast();
         }
         if (ch == '(')
         {
@@ -146,22 +163,11 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
                 str += axiom[i];
                 ++i;
             }
-            turtle.leftRotate(GenerationTools::normal(str.toInt(), stddevForStandardRotate));
+            nib.increaseAngle(GenerationTools::normal(str.toInt(), stddevForStandardRotate));
         }
     }
     painter.end();
     returnedPixmap = pixmap.scaled(550, 550);
-}
-
-
-void drawLine(QPainter &painter, TurtlePath &turtle, const QPen &pen, double len)
-{
-    QPointF curPos = turtle.currentPosition();
-    turtle.clear();
-    turtle.moveTo(curPos);
-    turtle.drawLine(len);
-    painter.setPen(pen);
-    painter.drawPath(turtle);
 }
 
 void growTree(QString &axiom, const QString &rule, int n, double lengthening)
@@ -192,64 +198,4 @@ void growTree(QString &axiom, const QString &rule, int n, double lengthening)
         }
         axiom = bufAxiom;
     }
-}
-
-TurtleData::TurtleData()
-    :m_angle(0), m_point(0, 0), m_width(0), m_red(0), m_green(0), m_blue(0) {}
-
-TurtleData::TurtleData(double angle, QPointF point, double width, double red, double green, double blue)
-    :m_angle(angle), m_point(point), m_width(width), m_red(red), m_green(green), m_blue(blue) {}
-
-void TurtleData::set(double angle, QPointF point, double width, double red, double green, double blue)
-{
-    m_angle = angle;
-    m_point = point;
-    m_width = width;
-    m_red = red;
-    m_green = green;
-    m_blue = blue;
-}
-
-void TurtleData::set(double angle, QPointF point)
-{
-    m_angle = angle;
-    m_point = point;
-}
-
-void TurtleData::set(struct TurtleData data)
-{
-    m_angle = data.m_angle;
-    m_point = data.m_point;
-    m_width = data.m_width;
-    m_red = data.m_red;
-    m_green = data.m_green;
-    m_blue = data.m_blue;
-}
-
-void TurtleData::setColor(const QColor& color)
-{
-    m_red = color.red();
-    m_green = color.green();
-    m_blue = color.blue();
-}
-
-QColor TurtleData::getColor()
-{
-    QColor color;
-    if (m_red > 255)
-        m_red = 255;
-    if (m_red < 0)
-        m_red = 0;
-    if (m_green > 255)
-        m_green = 255;
-    if (m_green < 0)
-        m_green = 0;
-    if (m_blue > 255)
-        m_blue = 255;
-    if (m_blue < 0)
-        m_blue = 0;
-    color.setRed(m_red);
-    color.setGreen(m_green);
-    color.setBlue(m_blue);
-    return color;
 }

@@ -1,7 +1,7 @@
 #include "genom.h"
 #include "generationTools.h"
 #include <QRandomGenerator>
-#include <QTime>
+#include <QDebug>
 
 Genom::Genom()
 {
@@ -155,8 +155,7 @@ void Genom::rule(QString &str) const
             if (str[i] != '?' || curByteNum > m_endOfRuleBlock - m_bytePerNode) //пропуск узлов при выходе из отведенного блока генов
                 buffer += str[i];
             else //на месте узла создаем новые ответвления
-            {
-                flagHasNodes= 1;
+            {               
                 int numberOfBranches = getNumberOfBranches(curByteNum); //выбираем число ответвлений
                 for (int j = 0; j < numberOfBranches; ++j) //рисуем новые отростки
                 {
@@ -170,6 +169,7 @@ void Genom::rule(QString &str) const
                         getTrunkParams(params, curByteNum);
                         buffer += params;
                         buffer += '?';
+                        flagHasNodes= 1;
                     }
                     else
                         buffer += 'I';
@@ -223,6 +223,71 @@ QColor Genom::trunkColor() const
     QColor color(red, green, blue);
     return color;
 }
+
+void Genom::leaf(TurtlePath &path, double len, double angle) const
+{
+    path.clear();
+    QPointF point(0, 0);
+    path.moveTo(point);
+    path.setAngle(0);
+
+    const double smallestAngle = 90/8.0;
+    QVector<uint8_t> vector;
+    for (int i = m_endOfTrunkColorBlock;i < m_endOfTrunkColorBlock + 32; ++i)
+    {
+        vector.append(m_bytes[i] / 16);
+        vector.append(m_bytes[i] % 16);
+    }
+
+    QList<QPointF> queue;
+    int genNum = 0;
+    queue.append(point);
+
+    while (!queue.empty() && 4*genNum+3 < vector.size())
+    {
+        path.moveTo(queue.first());
+        queue.removeFirst();
+        for (int i = 0; i < 4; ++i)
+        {
+            if (vector[4*genNum + i] < 8)
+            {
+                path.setAngle(vector[4*genNum + i] * smallestAngle + 90 * i + angle);
+                path.drawLine(len);
+                queue.append(path.currentPosition());
+            }
+        }
+        ++genNum;
+    }
+}
+
+void Genom::leaf(QString &str) const
+{
+    str.clear();
+    int curByteNum = m_endOfTrunkColorBlock;
+    int n = 3;
+    for (int i = 0; i < n; ++i)
+    {
+        str += "A{";
+        int len = GenerationTools::bounded(m_bytes[curByteNum], 10, 200);
+        str += QString::number(len) + ',';
+        ++curByteNum;
+
+        double angle = GenerationTools::bounded(m_bytes[curByteNum], -90, 90) * 4;
+        angle /= (len-1);
+        str += QString::number(angle) + ',';
+        ++curByteNum;
+
+        str += QString::number(m_bytes[curByteNum]) + ',';
+        ++curByteNum;
+
+        str += QString::number(m_bytes[curByteNum]) + ',';
+        ++curByteNum;
+
+        str += QString::number(m_bytes[curByteNum]) + '}';
+        ++curByteNum;
+    }
+}
+
 
 void Genom::cross(const Genom &father, Genom& son) const
 {
