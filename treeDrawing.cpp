@@ -1,6 +1,5 @@
 #include <QPainter>
 #include <QDebug>
-#include <QRandomGenerator>
 #include "treeDrawing.h"
 #include "generationTools.h"
 #include "nib.h"
@@ -25,8 +24,7 @@ void drawLine(QPainter &painter, Nib &nib, double len)
 }
 void growTree(QString &axiom, const QString &rule, int n, double lengthening);
 
-void drawTree(QPixmap& returnedPixmap, const Genom &genom,
-              double stddevForStandardRotate, double stddevForSmallRotate, double stddevForTrunkLength)
+void drawTree(QPixmap& returnedPixmap, const Genom &genom, const struct StandardDeviations &stddevs)
 {
     QPixmap pixmap(1100, 1100);
     pixmap.fill();
@@ -37,11 +35,9 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
     int numberОfGrowthIterations = 3;
     double startLen = 40;
     double pieceOfTrunkLen = 1;
-    double pieceOfAntennaLen = 1;
+    double pieceOfAntennaLen = 0.5;
     double minWidth = 3;
-    double antennaWidth = 3;
     double startWidth = 30;
-    QList<QColor> leafColors = {QColorConstants::Green, QColorConstants::DarkYellow, QColorConstants::DarkGreen};
     QString axiom = "I";
     QList<Nib> stackOfNibs;
     Nib nib(minWidth, startWidth, startPoint, 90);
@@ -60,14 +56,7 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
     growTree(axiom, rule, numberОfGrowthIterations, lengthening);
     qDebug() << axiom.length();
 
-
-    ////////////////////////
     axiom.replace('I', leafRule);
-    ////////////////////////
-    TurtlePath leaf;
-    genom.leaf(leaf, 10);
-    ////////////////////////
-
 
     QChar ch;
     for (int i = 0; i < axiom.size(); ++i)
@@ -85,28 +74,19 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
             QStringList paramList = paramStr.split(',');
             int countOfPieces = paramList[0].toInt();
             double angle = paramList[1].toDouble();
-            nib.setColor(paramList[2].toInt(), paramList[3].toInt(), paramList[4].toInt());
-            nib.setWidth(antennaWidth);
+            double angleStep = paramList[2].toDouble();
+            double width = paramList[3].toDouble();
+            double widthStep = paramList[4].toDouble();
+            nib.setColor(paramList[5].toInt(), paramList[6].toInt(), paramList[7].toInt());
+            nib.setWidth(width);
 
             for (int j = 0; j < countOfPieces; ++j)
-            {
+            {               
                 drawLine(painter, nib, pieceOfAntennaLen);
                 nib.increaseAngle(angle);
+                nib.increaseWidth(widthStep);
+                angle += angleStep + GenerationTools::normal(0, stddevs.antennaRotate);
             }
-        }
-        if (ch == 'I')
-        {
-            /*
-            nib.setColor(leafColors[QRandomGenerator::system()->bounded(leafColors.size())]);
-            nib.setWidth(antennaWidth);
-            /////////////////////////
-            painter.setPen(pen);
-            genom.leaf(leaf, 15, turtle.getAngle());
-            TurtlePath myleaf = leaf.translated(turtle.currentPosition());
-            painter.drawPath(myleaf);
-            ////////////////////////
-            //drawLine(painter, turtle, pen, leafLen);
-            */
         }
         if (ch == 'T')
         {
@@ -118,7 +98,7 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
                 ++i;
             }
             QStringList paramList = paramStr.split(',');
-            double len = startLen * paramList[0].toDouble() * GenerationTools::normal(1, stddevForTrunkLength);
+            double len = startLen * paramList[0].toDouble() * GenerationTools::normal(1, stddevs.trunkLength);
             double thinning = 1 - paramList[1].toDouble() / 10000;
             //делить на 100 чтобы перевести в проценты
             //делать еще не 100 чтобы перевести в множитель
@@ -135,7 +115,7 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
             {
                 nib.increaseColor(red, green, blue);
                 nib.multiplyWidth(thinning);
-                nib.increaseAngle(GenerationTools::normal(0, stddevForSmallRotate));
+                nib.increaseAngle(GenerationTools::normal(0, stddevs.unplannedRotate));
                 drawLine(painter, nib, pieceOfTrunkLen);
                 drawnLength += pieceOfTrunkLen;
                 if (len - drawnLength < pieceOfTrunkLen) //дорисуем то что осталось
@@ -163,7 +143,7 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom,
                 str += axiom[i];
                 ++i;
             }
-            nib.increaseAngle(GenerationTools::normal(str.toInt(), stddevForStandardRotate));
+            nib.increaseAngle(GenerationTools::normal(str.toInt(), stddevs.plannedRotate));
         }
     }
     painter.end();

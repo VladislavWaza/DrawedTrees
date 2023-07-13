@@ -14,16 +14,14 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     nib.cpp \
-    treeDrawing.cpp \
-    turtle.cpp
+    treeDrawing.cpp
 
 HEADERS += \
     generationTools.h \
     genom.h \
     mainwindow.h \
     nib.h \
-    treeDrawing.h \
-    turtle.h
+    treeDrawing.h
 
 FORMS += \
     mainwindow.ui

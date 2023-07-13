@@ -224,47 +224,43 @@ QColor Genom::trunkColor() const
     return color;
 }
 
-void Genom::leaf(TurtlePath &path, double len, double angle) const
+
+int Genom::getNumberOfAntennas() const
 {
-    path.clear();
-    QPointF point(0, 0);
-    path.moveTo(point);
-    path.setAngle(0);
-
-    const double smallestAngle = 90/8.0;
-    QVector<uint8_t> vector;
-    for (int i = m_endOfTrunkColorBlock;i < m_endOfTrunkColorBlock + 32; ++i)
+    //6 байт, старшие разряды
+    QList<int> counter(4);
+    counter.fill(0);
+    //считаем кол-во появлений чисел 0, 1, 2, 3 по двоичный записи
+    //по 2 числа с каждого байта
+    for (int i = m_endOfLengtheningBlock; i < m_endOfLengtheningBlock + 6; ++i)
     {
-        vector.append(m_bytes[i] / 16);
-        vector.append(m_bytes[i] % 16);
+        int highBits = m_bytes[i] / 16;
+        ++counter[highBits / 4];
+        ++counter[highBits % 4];
     }
 
-    QList<QPointF> queue;
-    int genNum = 0;
-    queue.append(point);
-
-    while (!queue.empty() && 4*genNum+3 < vector.size())
+    int numberOfAntennas = 0;
+    int maxCounter = 0;
+    //за ответ возьмем наиболее часто встречающееся число + 1
+    //при равенстве берется наибольшее число
+    for (int j = 0; j < counter.size(); ++j)
     {
-        path.moveTo(queue.first());
-        queue.removeFirst();
-        for (int i = 0; i < 4; ++i)
+        if (counter[j] >= maxCounter)
         {
-            if (vector[4*genNum + i] < 8)
-            {
-                path.setAngle(vector[4*genNum + i] * smallestAngle + 90 * i + angle);
-                path.drawLine(len);
-                queue.append(path.currentPosition());
-            }
+            maxCounter = counter[j];
+            numberOfAntennas = j + 1;
         }
-        ++genNum;
     }
+    return numberOfAntennas;
 }
+
 
 void Genom::leaf(QString &str) const
 {
     str.clear();
     int curByteNum = m_endOfTrunkColorBlock;
-    int n = 3;
+    int n = getNumberOfAntennas();
+    qDebug() << n;
     for (int i = 0; i < n; ++i)
     {
         str += "A{";
@@ -272,9 +268,24 @@ void Genom::leaf(QString &str) const
         str += QString::number(len) + ',';
         ++curByteNum;
 
-        double angle = GenerationTools::bounded(m_bytes[curByteNum], -90, 90) * 4;
-        angle /= (len-1);
-        str += QString::number(angle) + ',';
+        double firstAngle = GenerationTools::bounded(m_bytes[curByteNum], -90, 90) * 4;
+        firstAngle /= (len-1);
+        str += QString::number(firstAngle) + ',';
+        ++curByteNum;
+
+        double sum = GenerationTools::bounded(m_bytes[curByteNum], -90, 90) * 4;
+        double lastAngle = 2 * sum / (len-1) - firstAngle;
+        double angleStep = (lastAngle - firstAngle) / (len-2);
+        str += QString::number(angleStep) + ',';
+        ++curByteNum;
+
+        double startWidth = GenerationTools::boundedDouble(m_bytes[curByteNum], 2, 7, 0.1);
+        str += QString::number(startWidth) + ',';
+        ++curByteNum;
+
+        double endWidth = GenerationTools::boundedDouble(m_bytes[curByteNum], 2, 7, 0.1);
+        double widthStep = (endWidth - startWidth) / (len-1);
+        str += QString::number(widthStep) + ',';
         ++curByteNum;
 
         str += QString::number(m_bytes[curByteNum]) + ',';

@@ -3,7 +3,15 @@
 #include <QPixmap>
 #include "genom.h"
 
-void drawTree(QPixmap& returnedPixmap, const Genom &genom,
-              double stddevForStandardRotate, double stddevForSmallRotate, double stddevForTrunkLength);
+struct StandardDeviations
+{
+    double plannedRotate;
+    double unplannedRotate;
+    double trunkLength;
+    double antennaRotate;
+};
+
+
+void drawTree(QPixmap& returnedPixmap, const Genom &genom, const struct StandardDeviations &stddevs);
 
 #endif // TREEDRAWING_H

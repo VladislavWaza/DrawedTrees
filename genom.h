@@ -2,7 +2,6 @@
 #define GENOM_H
 #include <QString>
 #include <QColor>
-#include "turtle.h"
 
 class Genom
 {
@@ -15,6 +14,9 @@ private:
     //выбирает число ветвей исходящих из узла
     int getNumberOfBranches(int curByteNum) const;
 
+    //выбирает линий задающих лист
+    int getNumberOfAntennas() const;
+
     //составляет дисретное распределение для работы функции getAngle
     void getAngleRange(QVector<int> &range) const;
 
@@ -23,12 +25,12 @@ private:
     void getTrunkParams(QString &params, int curByteNum) const;
 
 public:
-    static const int m_size = 200; //должно делиться на 4
+    static const int m_size = 196; //должно делиться на 4
 
     //150 байт на правило для перевода междоузлия
     //5 байт на определение начала ствола
     //2 байта на величину удлиннения
-    //6 байт на цвет ствола(4 младших разряда каждого байта) и
+    //6 байт на цвет ствола(4 младших разряда каждого байта) и число линий задающих лист(4 старших разряда каждого байта)
 
     static const int m_endOfRuleBlock = 150;
     static const int m_endOfFirstTrunkBlock = 155;
@@ -37,7 +39,7 @@ public:
 
     static const int m_bytePerNode = 25; //узел определяется 25 байтами
     static const int m_bytePerBranch = 5; //ответвление определяется 5 байтами
-
+    static const int m_bytePerAntenna = 8; //каждая из линий задающих лист определяется 8 байтами
 
     Genom();
     Genom(const Genom &other);
@@ -64,7 +66,18 @@ public:
     //I означает междоузлие
     void rule(QString &str) const;
 
-    void leaf(TurtlePath &path, double len, double angle = 0) const;
+    //выдает правило отрисовки листа
+    //алфавит правила:
+    //A означает нарисовать изогнутую линию
+    //в фигурных скобках перечислены параметры линии, через запятую
+    //первое это количество кусочков одинаковой длины которыми задается линия
+    //второе это начальное изменение угла, которое происходит между первым и вторым кусочком
+    //третье это изменение изменения угла, то есть по сути дискретное ускорение
+    //так между вторым и третьим кусочком изменение угла составит начальное + ускорение
+    //а между третьим и четвертым - начальное + 2 * ускорение
+    //четвертое это стартовая толщина
+    //пятое это шаг изменения толщины
+    //следующие 3 числа означают цвет в формате RGB
     void leaf(QString &str) const;
 
     //выбирает стартовый цвет ствола
