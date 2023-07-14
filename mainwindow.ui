@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>744</width>
-    <height>630</height>
+    <width>572</width>
+    <height>670</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,65 +24,30 @@
      </rect>
     </property>
     <property name="text">
-     <string>TextLabel</string>
+     <string/>
     </property>
    </widget>
-   <widget class="QWidget" name="verticalLayoutWidget">
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>20</y>
-      <width>160</width>
-      <height>541</height>
+      <x>9</x>
+      <y>570</y>
+      <width>551</width>
+      <height>41</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="againButton">
+       <property name="text">
+        <string>Еще раз</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="randomTreeButton">
        <property name="text">
         <string>Случайное дерево</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="loadButton">
-       <property name="text">
-        <string>Загрузить дерево</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="saveButton">
-       <property name="text">
-        <string>Сохранить дерево</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_5">
-       <property name="text">
-        <string>PushButton</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_6">
-       <property name="text">
-        <string>PushButton</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_7">
-       <property name="text">
-        <string>PushButton</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton">
-       <property name="text">
-        <string>PushButton</string>
        </property>
       </widget>
      </item>
@@ -94,7 +59,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>744</width>
+     <width>572</width>
      <height>29</height>
     </rect>
    </property>

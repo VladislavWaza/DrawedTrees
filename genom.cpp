@@ -1,7 +1,6 @@
 #include "genom.h"
 #include "generationTools.h"
 #include <QRandomGenerator>
-#include <QDebug>
 
 Genom::Genom()
 {
@@ -184,7 +183,6 @@ void Genom::rule(QString &str) const
         buffer.clear();
     }
     str = str.replace('?', 'I'); //заменяем оставшиеся узлы на листы
-    qDebug() << curByteNum;
 }
 
 double Genom::lengthening() const
@@ -260,7 +258,6 @@ void Genom::leaf(QString &str) const
     str.clear();
     int curByteNum = m_endOfTrunkColorBlock;
     int n = getNumberOfAntennas();
-    qDebug() << n;
     for (int i = 0; i < n; ++i)
     {
         str += "A{";

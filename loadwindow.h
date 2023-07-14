@@ -2,6 +2,7 @@
 #define LOADWINDOW_H
 
 #include <QDialog>
+#include <QVBoxLayout>
 
 namespace Ui {
 class LoadWindow;
@@ -15,8 +16,11 @@ public:
     explicit LoadWindow(QWidget *parent = nullptr);
     ~LoadWindow();
 
+private slots:
+
 private:
     Ui::LoadWindow *ui;
+    QVBoxLayout *boxLayout;
 };
 
 #endif // LOADWINDOW_H

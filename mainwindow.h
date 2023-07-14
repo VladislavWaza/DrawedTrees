@@ -21,16 +21,15 @@ public:
 private slots:
     void on_randomTreeButton_clicked();
 
-    void on_loadButton_clicked();
-
     void on_load_triggered();
 
     void on_save_triggered();
 
+    void on_againButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     LoadWindow *loadWindow;
-    QFile *file;
     QPixmap *pixmap;
     Genom *genom;
 };

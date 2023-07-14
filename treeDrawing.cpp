@@ -1,5 +1,4 @@
 #include <QPainter>
-#include <QDebug>
 #include "treeDrawing.h"
 #include "generationTools.h"
 #include "nib.h"
@@ -44,17 +43,14 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom, const struct Standard
 
     QString rule;
     genom.rule(rule);
-    qDebug() << rule;
 
     QString leafRule;
     genom.leaf(leafRule);
-    qDebug() << leafRule;
 
     double lengthening = genom.lengthening();
     nib.setColor(genom.trunkColor());
 
     growTree(axiom, rule, numberОfGrowthIterations, lengthening);
-    qDebug() << axiom.length();
 
     axiom.replace('I', leafRule);
 
