@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QFile>
+#include "loadwindow.h"
+#include "genom.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -15,7 +18,20 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void on_randomTreeButton_clicked();
+
+    void on_loadButton_clicked();
+
+    void on_load_triggered();
+
+    void on_save_triggered();
+
 private:
     Ui::MainWindow *ui;
+    LoadWindow *loadWindow;
+    QFile *file;
+    QPixmap *pixmap;
+    Genom *genom;
 };
 #endif // MAINWINDOW_H

@@ -11,6 +11,7 @@ CONFIG += c++17
 SOURCES += \
     generationTools.cpp \
     genom.cpp \
+    loadwindow.cpp \
     main.cpp \
     mainwindow.cpp \
     nib.cpp \
@@ -19,11 +20,13 @@ SOURCES += \
 HEADERS += \
     generationTools.h \
     genom.h \
+    loadwindow.h \
     mainwindow.h \
     nib.h \
     treeDrawing.h
 
 FORMS += \
+    loadwindow.ui \
     mainwindow.ui
 
 # Default rules for deployment.

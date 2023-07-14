@@ -1,6 +1,9 @@
+#include <QTextStream>
+#include <QMessageBox>
+#include <QDir>
+#include <QDateTime>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "genom.h"
 #include "treeDrawing.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -8,6 +11,10 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    loadWindow = new LoadWindow;
+    file = new QFile("./saves/genoms.csv");
+    pixmap = new QPixmap;
+
 
     StandardDeviations stddevs;
     stddevs.plannedRotate = 0; //7.5
@@ -32,23 +39,99 @@ MainWindow::MainWindow(QWidget *parent)
     uint8_t ptr15[Genom::m_size] = {7, 119, 87, 9, 174, 44, 202, 26, 177, 193, 105, 114, 220, 179, 138, 252, 254, 94, 103, 64, 134, 252, 29, 6, 40, 64, 137, 246, 248, 116, 227, 248, 63, 99, 132, 83, 179, 210, 195, 44, 70, 16, 191, 131, 216, 235, 215, 61, 100, 134, 13, 142, 249, 10, 117, 158, 165, 83, 178, 195, 43, 166, 38, 37, 98, 27, 168, 71, 90, 44, 129, 20, 26, 17, 160, 200, 21, 108, 104, 234, 159, 155, 245, 182, 33, 37, 118, 87, 61, 46, 17, 209, 237, 27, 231, 172, 237, 31, 15, 164, 39, 147, 176, 162, 144, 86, 178, 125, 30, 50, 136, 110, 29, 145, 178, 179, 10, 61, 1, 29, 125, 212, 84, 223, 168, 54, 58, 213, 34, 95, 41, 166, 215, 168, 117, 251, 252, 174, 74, 238, 152, 232, 113, 233, 123, 149, 127, 224, 106, 102, 69, 8, 207, 224, 8, 173, 169, 80, 203, 88, 92, 210, 234, 173, 255, 164, 255, 165, 79, 255, 73, 196, 130, 241, 104, 254, 229, 45, 130, 76, 98, 136, 238, 162, 9, 17, 58, 146, 90, 52, 214, 110, 74, 243, 107, 150};
 
     Genom genom2(ptr);
-    Genom genom;
+    genom = new Genom(ptr6);
     //genom.cross(genom2, genom);
 
 
 
 
-    genom.genom(ptr);
+    genom->genom(ptr);
     QDebug deb = qDebug();
     for (int i = 0; i < Genom::m_size; ++i)
         deb.nospace() << static_cast<int>(ptr[i]) << ", ";
 
-    QPixmap pixmap;
-    drawTree(pixmap, genom, stddevs);
-    ui->label->setPixmap(pixmap);
+    drawTree(*pixmap, *genom, stddevs);
+    ui->label->setPixmap(pixmap->scaled(550, 550, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete loadWindow;
+    delete file;
+    delete pixmap;
+    delete genom;
+}
+
+void MainWindow::on_randomTreeButton_clicked()
+{
+    StandardDeviations stddevs;
+    stddevs.plannedRotate = 0; //7.5
+    stddevs.unplannedRotate = 0; //1
+    stddevs.trunkLength = 0; //0.25
+    stddevs.antennaRotate = 0; //0.1
+
+
+    delete genom;
+    genom = new Genom;
+    uint8_t bytes[Genom::m_size];
+    genom->genom(bytes);
+    QDebug deb = qDebug();
+    for (int i = 0; i < Genom::m_size; ++i)
+        deb.nospace() << static_cast<int>(bytes[i]) << ", ";
+
+    drawTree(*pixmap, *genom, stddevs);
+    ui->label->setPixmap(pixmap->scaled(550, 550, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+}
+
+void MainWindow::on_loadButton_clicked()
+{
+    loadWindow->exec();
+}
+
+
+
+void MainWindow::on_load_triggered()
+{
+    loadWindow->exec();
+}
+
+
+void MainWindow::on_save_triggered()
+{
+    if (!QDir("saves").exists())
+        QDir().mkdir("saves");
+
+    if (!file->open(QIODeviceBase::Text | QIODeviceBase::WriteOnly | QIODeviceBase::Append))
+    {
+        QMessageBox::critical(this, "Ошибка!", "Не удалось создать и/или открыть файл!");
+    }
+    else
+    {
+        QTextStream out(file);
+        QString dateTime = QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss");
+        out << dateTime;
+        uint8_t bytes[Genom::m_size];
+        genom->genom(bytes);
+        for (int i = 0; i < Genom::m_size; ++i)
+            out << ',' << static_cast<int>(bytes[i]);
+        out << '\n';
+        file->close();
+
+        QString pixmapName = "./saves/TREE_";
+        for (int i = 0; i < dateTime.size(); ++i)
+        {
+            if (dateTime[i] == '.' || dateTime[i] == ':')
+                pixmapName.append('_');
+            else
+                pixmapName.append(dateTime[i]);
+        }
+        pixmapName += ".png";
+
+        QPixmap preview = pixmap->scaled(100, 100, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        if(!preview.save(pixmapName))
+        {
+            QMessageBox::critical(this, "Ошибка!", "Не удалось сохранить превью дерева!");
+        }
+    }
 }

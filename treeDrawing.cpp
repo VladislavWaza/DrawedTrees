@@ -147,7 +147,7 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom, const struct Standard
         }
     }
     painter.end();
-    returnedPixmap = pixmap.scaled(550, 550);
+    returnedPixmap = pixmap;
 }
 
 void growTree(QString &axiom, const QString &rule, int n, double lengthening)
