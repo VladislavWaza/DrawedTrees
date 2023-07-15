@@ -25,18 +25,35 @@
         <x>0</x>
         <y>0</y>
         <width>374</width>
-        <height>463</height>
+        <height>461</height>
        </rect>
       </property>
      </widget>
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="pushButton">
-     <property name="text">
-      <string>PushButton</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="loadButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Загрузить</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="deleteButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Удалить</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

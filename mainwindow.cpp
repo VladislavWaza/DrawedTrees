@@ -26,9 +26,15 @@ void MainWindow::on_load_triggered()
 {
     loadWindow = new LoadWindow;
     loadWindow->exec();
-
-    //loadWindow->getGenom();
-
+    uint8_t *bytes = new uint8_t[Genom::m_size];
+    uint8_t *duplicate = bytes;
+    loadWindow->getGenome(&bytes);
+    if (bytes != nullptr)
+    {
+        *genom = bytes;
+        on_againButton_clicked();
+    }
+    delete[] duplicate;
     delete loadWindow;
 }
 
