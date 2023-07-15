@@ -22,27 +22,33 @@ MainWindow::~MainWindow()
     delete genom;
 }
 
+void MainWindow::genomeLoaded(uint8_t *bytes)
+{
+    *genom = bytes;
+    on_againButton_clicked();
+}
+
+void MainWindow::genomeLoadedForCross(uint8_t *bytes)
+{
+    Genom other(bytes);
+    genom->cross(other, *genom);
+    on_againButton_clicked();
+}
+
 void MainWindow::on_load_triggered()
 {
     loadWindow = new LoadWindow;
+    connect(loadWindow, &LoadWindow::loaded, this, &MainWindow::genomeLoaded);
     loadWindow->exec();
-    uint8_t *bytes = new uint8_t[Genom::m_size];
-    uint8_t *duplicate = bytes;
-    loadWindow->getGenome(&bytes);
-    if (bytes != nullptr)
-    {
-        *genom = bytes;
-        on_againButton_clicked();
-    }
-    delete[] duplicate;
+    disconnect(loadWindow, &LoadWindow::loaded, this, &MainWindow::genomeLoaded);
     delete loadWindow;
 }
 
 
 void MainWindow::on_save_triggered()
 {
+    this->setDisabled(true);
     QFile file("./saves/genoms.csv");
-
     if (!QDir("saves").exists()) //все файлы будут в папке saves
         QDir().mkdir("saves");
 
@@ -64,22 +70,14 @@ void MainWindow::on_save_triggered()
         file.close();
 
         //в формате png сохраняется превью дерева с именем соответствующем времени сохранения
-        QString pixmapName = "./saves/TREE_";
-        for (int i = 0; i < dateTime.size(); ++i)
-        {
-            if (dateTime[i] == '.' || dateTime[i] == ':')
-                pixmapName.append('_');
-            else
-                pixmapName.append(dateTime[i]);
-        }
-        pixmapName += ".png";
-
+        QString pixmapName = previewName(dateTime);
         QPixmap preview = pixmap->scaled(100, 100, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         if(!preview.save(pixmapName))
         {
             QMessageBox::critical(this, "Ошибка!", "Не удалось сохранить превью дерева!");
         }
     }
+    this->setEnabled(true);
 }
 
 void MainWindow::on_randomTreeButton_clicked()
@@ -99,5 +97,15 @@ void MainWindow::on_againButton_clicked()
 
     drawTree(*pixmap, *genom, stddevs);
     ui->label->setPixmap(pixmap->scaled(550, 550, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+}
+
+
+void MainWindow::on_cross_triggered()
+{
+    loadWindow = new LoadWindow;
+    connect(loadWindow, &LoadWindow::loaded, this, &MainWindow::genomeLoadedForCross);
+    loadWindow->exec();
+    disconnect(loadWindow, &LoadWindow::loaded, this, &MainWindow::genomeLoadedForCross);
+    delete loadWindow;
 }
 

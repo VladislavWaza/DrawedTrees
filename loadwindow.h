@@ -18,22 +18,26 @@ class LoadWindow : public QDialog
 public:
     explicit LoadWindow(QWidget *parent = nullptr);
     ~LoadWindow();
-
-    void getGenome(uint8_t **ptr);
 signals:
     void clicked(QObject *obj);
+    void loaded(uint8_t *bytes);
 private slots:
     void genomeClicked(QObject *obj);
+    void on_loadButton_clicked();
+    void on_deleteButton_clicked();
+
 private:
     Ui::LoadWindow *ui;
     QVBoxLayout *boxLayout;
-    uint8_t *bytes;
     QLabel *selectedLabel;
     QPalette *defaultPalette;
     QPalette *selectPalette;
 
+    bool removeLine(const QString &fileName, int lineNumber);
 protected:
     bool eventFilter(QObject *obj, QEvent *ev);
 };
+
+QString previewName(QString dateTime);
 
 #endif // LOADWINDOW_H

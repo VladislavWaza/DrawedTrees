@@ -54,10 +54,10 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom, const struct Standard
 
     axiom.replace('I', leafRule);
 
-    QChar ch;
+    QStringList paramList;
     for (int i = 0; i < axiom.size(); ++i)
     {
-        ch = axiom[i];
+        QChar ch = axiom[i];
         if (ch == 'A')
         {
             QString paramStr;
@@ -67,7 +67,7 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom, const struct Standard
                 paramStr += axiom[i];
                 ++i;
             }
-            QStringList paramList = paramStr.split(',');
+            paramList = paramStr.split(',');
             int countOfPieces = paramList[0].toInt();
             double angle = paramList[1].toDouble();
             double angleStep = paramList[2].toDouble();
@@ -93,7 +93,7 @@ void drawTree(QPixmap& returnedPixmap, const Genom &genom, const struct Standard
                 paramStr += axiom[i];
                 ++i;
             }
-            QStringList paramList = paramStr.split(',');
+            paramList = paramStr.split(',');
             double len = startLen * paramList[0].toDouble() * GenerationTools::normal(1, stddevs.trunkLength);
             double thinning = 1 - paramList[1].toDouble() / 10000;
             //делить на 100 чтобы перевести в проценты

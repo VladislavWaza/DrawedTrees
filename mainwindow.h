@@ -19,6 +19,10 @@ public:
     ~MainWindow();
 
 private slots:
+    void genomeLoaded(uint8_t *bytes);
+
+    void genomeLoadedForCross(uint8_t *bytes);
+
     void on_randomTreeButton_clicked();
 
     void on_load_triggered();
@@ -26,6 +30,8 @@ private slots:
     void on_save_triggered();
 
     void on_againButton_clicked();
+
+    void on_cross_triggered();
 
 private:
     Ui::MainWindow *ui;
