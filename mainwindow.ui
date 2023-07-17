@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="label">
@@ -39,6 +39,9 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="againButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Еще раз</string>
        </property>
@@ -48,6 +51,16 @@
       <widget class="QPushButton" name="randomTreeButton">
        <property name="text">
         <string>Случайное дерево</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="crossButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Скрестить</string>
        </property>
       </widget>
      </item>
@@ -74,7 +87,10 @@
     <property name="title">
      <string>Опции</string>
     </property>
-    <addaction name="cross"/>
+    <addaction name="curFirst"/>
+    <addaction name="curSecond"/>
+    <addaction name="chooseFirst"/>
+    <addaction name="chooseSecond"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -90,9 +106,30 @@
     <string>Сохранить</string>
    </property>
   </action>
-  <action name="cross">
+  <action name="curFirst">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
-    <string>Скрестить...</string>
+    <string>Установить текущий как первого родителя</string>
+   </property>
+  </action>
+  <action name="curSecond">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Установить текущий как второго родителя</string>
+   </property>
+  </action>
+  <action name="chooseFirst">
+   <property name="text">
+    <string>Выбрать первого родителя</string>
+   </property>
+  </action>
+  <action name="chooseSecond">
+   <property name="text">
+    <string>Выбрать второго родителя</string>
    </property>
   </action>
  </widget>

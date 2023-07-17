@@ -13,6 +13,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);      
     pixmap = new QPixmap;
     genom = new Genom;
+    firstParent = new Genom;
+    secondParent = new Genom;
+    firstParentWasChosen = false;
+    secondParentWasChosen = false;
 }
 
 MainWindow::~MainWindow()
@@ -20,19 +24,15 @@ MainWindow::~MainWindow()
     delete ui;
     delete pixmap;
     delete genom;
+    delete firstParent;
+    delete secondParent;
 }
 
 void MainWindow::genomeLoaded(uint8_t *bytes)
 {
     *genom = bytes;
     on_againButton_clicked();
-}
-
-void MainWindow::genomeLoadedForCross(uint8_t *bytes)
-{
-    Genom other(bytes);
-    genom->cross(other, *genom);
-    on_againButton_clicked();
+    activateAgainButton();
 }
 
 void MainWindow::on_load_triggered()
@@ -43,7 +43,6 @@ void MainWindow::on_load_triggered()
     disconnect(loadWindow, &LoadWindow::loaded, this, &MainWindow::genomeLoaded);
     delete loadWindow;
 }
-
 
 void MainWindow::on_save_triggered()
 {
@@ -85,6 +84,7 @@ void MainWindow::on_randomTreeButton_clicked()
     delete genom;
     genom = new Genom;
     on_againButton_clicked();
+    activateAgainButton();
 }
 
 void MainWindow::on_againButton_clicked()
@@ -99,13 +99,68 @@ void MainWindow::on_againButton_clicked()
     ui->label->setPixmap(pixmap->scaled(550, 550, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }
 
+void MainWindow::on_curFirst_triggered()
+{
+    *firstParent = *genom;
+    firstParentWasChosen = true;
+    if (secondParentWasChosen)
+        ui->crossButton->setEnabled(true);
+}
 
-void MainWindow::on_cross_triggered()
+void MainWindow::firstParentLoaded(uint8_t *bytes)
+{
+    *firstParent = bytes;
+    firstParentWasChosen = true;
+    if (secondParentWasChosen)
+        ui->crossButton->setEnabled(true);
+}
+
+void MainWindow::on_curSecond_triggered()
+{
+    *secondParent = *genom;
+    secondParentWasChosen = true;
+    if (firstParentWasChosen)
+        ui->crossButton->setEnabled(true);
+}
+
+void MainWindow::secondParentLoaded(uint8_t *bytes)
+{
+    *secondParent = bytes;
+    secondParentWasChosen = true;
+    if (firstParentWasChosen)
+        ui->crossButton->setEnabled(true);
+}
+
+void MainWindow::on_crossButton_clicked()
+{
+    firstParent->cross(*secondParent, *genom);
+    on_againButton_clicked();
+    activateAgainButton();
+}
+
+
+void MainWindow::on_chooseFirst_triggered()
 {
     loadWindow = new LoadWindow;
-    connect(loadWindow, &LoadWindow::loaded, this, &MainWindow::genomeLoadedForCross);
+    connect(loadWindow, &LoadWindow::loaded, this, &MainWindow::firstParentLoaded);
     loadWindow->exec();
-    disconnect(loadWindow, &LoadWindow::loaded, this, &MainWindow::genomeLoadedForCross);
+    disconnect(loadWindow, &LoadWindow::loaded, this, &MainWindow::firstParentLoaded);
     delete loadWindow;
 }
 
+
+void MainWindow::on_chooseSecond_triggered()
+{
+    loadWindow = new LoadWindow;
+    connect(loadWindow, &LoadWindow::loaded, this, &MainWindow::secondParentLoaded);
+    loadWindow->exec();
+    disconnect(loadWindow, &LoadWindow::loaded, this, &MainWindow::secondParentLoaded);
+    delete loadWindow;
+}
+
+void MainWindow::activateAgainButton()
+{
+    ui->againButton->setEnabled(true);
+    ui->curFirst->setEnabled(true);
+    ui->curSecond->setEnabled(true);
+}

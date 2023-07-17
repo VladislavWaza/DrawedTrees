@@ -21,7 +21,9 @@ public:
 private slots:
     void genomeLoaded(uint8_t *bytes);
 
-    void genomeLoadedForCross(uint8_t *bytes);
+    void firstParentLoaded(uint8_t *bytes);
+
+    void secondParentLoaded(uint8_t *bytes);
 
     void on_randomTreeButton_clicked();
 
@@ -31,12 +33,26 @@ private slots:
 
     void on_againButton_clicked();
 
-    void on_cross_triggered();
+    void on_curFirst_triggered();
+
+    void on_curSecond_triggered();
+
+    void on_crossButton_clicked();
+
+    void on_chooseFirst_triggered();
+
+    void on_chooseSecond_triggered();
 
 private:
     Ui::MainWindow *ui;
     LoadWindow *loadWindow;
     QPixmap *pixmap;
     Genom *genom;
+    Genom *firstParent;
+    Genom *secondParent;
+    bool firstParentWasChosen;
+    bool secondParentWasChosen;
+
+    void activateAgainButton();
 };
 #endif // MAINWINDOW_H
