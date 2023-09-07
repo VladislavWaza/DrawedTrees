@@ -1,8 +1,17 @@
-# Drawed Trees
-I am trying to create an algorithm that can generate trees, with the preservation of the genome and the possibility of crossing.
+## Drawed Trees
+The goal of this project is to create an algorithm that can generate trees with genome preservation and the possibility of crossing.
 
-At the moment, with a low probability, the algorithm is able to generate a plausible tree. 
-In addition, trees drawn by the same gnome have slight differences, as if it were in nature.
+The project is inspired by [this video](https://youtu.be/HHcx0pyic3I?si=ZSXOmZuqSxfaQiwk). Many ideas are taken from there.
+
+
+### Brief description of the genome:
+ - Genome length: 196 bytes.
+ - The tree is generated using the [L-system](https://en.wikipedia.org/wiki/L-system). The genome defines this L-system.
+ - The genome sets the angles of the branches, the color and thickness of the trunk.
+ - The leaves are imitated by swirling lines, which are also set by the genome.
+
+
+At the moment, the algorithm is able to generate both a plausible earth tree and an alien tree.
 
 Earth tree             |  Alien tree
 :-------------------------:|:-------------------------:
