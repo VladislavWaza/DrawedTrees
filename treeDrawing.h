@@ -9,7 +9,11 @@ struct StandardDeviations
     double unplannedRotate;
     double trunkLength;
     double antennaRotate;
+
+    StandardDeviations &operator=(const StandardDeviations &other);
+    static StandardDeviations byDefault();
 };
+
 
 
 void drawTree(QPixmap& returnedPixmap, const Genom &genom, const struct StandardDeviations &stddevs);

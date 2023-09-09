@@ -5,6 +5,7 @@
 #include <QFile>
 #include "loadwindow.h"
 #include "genom.h"
+#include "treeDrawing.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -52,6 +53,7 @@ private:
     Genom *secondParent;
     bool firstParentWasChosen;
     bool secondParentWasChosen;
+    StandardDeviations _stddevs;
 
     void activateAgainButton();
 };

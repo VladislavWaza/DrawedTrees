@@ -4,7 +4,6 @@
 #include <QDateTime>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "treeDrawing.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -17,6 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
     secondParent = new Genom;
     firstParentWasChosen = false;
     secondParentWasChosen = false;
+
+    _stddevs = StandardDeviations::byDefault();
 }
 
 MainWindow::~MainWindow()
@@ -89,13 +90,7 @@ void MainWindow::on_randomTreeButton_clicked()
 
 void MainWindow::on_againButton_clicked()
 {
-    StandardDeviations stddevs;
-    stddevs.plannedRotate = 0; //7.5
-    stddevs.unplannedRotate = 0; //1
-    stddevs.trunkLength = 0; //0.25
-    stddevs.antennaRotate = 0; //0.1
-
-    drawTree(*pixmap, *genom, stddevs);
+    drawTree(*pixmap, *genom, _stddevs);
     ui->label->setPixmap(pixmap->scaled(550, 550, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }
 
@@ -164,3 +159,4 @@ void MainWindow::activateAgainButton()
     ui->curFirst->setEnabled(true);
     ui->curSecond->setEnabled(true);
 }
+

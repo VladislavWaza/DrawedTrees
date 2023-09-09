@@ -175,3 +175,22 @@ void growTree(QString &axiom, const QString &rule, int n, double lengthening)
         axiom = bufAxiom;
     }
 }
+
+StandardDeviations &StandardDeviations::operator=(const StandardDeviations &other)
+{
+    plannedRotate = other.plannedRotate;
+    unplannedRotate = other.unplannedRotate;
+    trunkLength = other.trunkLength;
+    antennaRotate = other.antennaRotate;
+    return *this;
+}
+
+StandardDeviations StandardDeviations::byDefault()
+{
+    StandardDeviations res;
+    res.plannedRotate = 7.5;
+    res.unplannedRotate = 1.5;
+    res.trunkLength = 0.25;
+    res.antennaRotate = 0.1;
+    return res;
+}
